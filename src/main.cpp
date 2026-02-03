@@ -1,6 +1,5 @@
 #include <Arduino.h>
 
-
 #define CONTROL_LED_PIN_BLUE 14
 #define CONTROL_LED_PIN_YELL 13
 #define CONTROL_LED_PIN_GREEN 12
@@ -9,50 +8,36 @@
 // put function declarations here:
 int myFunction(int, int);
 
-void setup() {
+void setup()
+{
   // put your setup code here, to run once:
   // int result = myFunction(2, 3);
   Serial.begin(115200);
 
-  pinMode(CONTROL_LED_PIN_BLUE , OUTPUT);
-  pinMode(CONTROL_LED_PIN_YELL , OUTPUT);
-  pinMode(CONTROL_LED_PIN_GREEN , OUTPUT);
-  pinMode(CONTROL_LED_PIN_RED , OUTPUT);
+  pinMode(CONTROL_LED_PIN_BLUE, OUTPUT);
+  pinMode(CONTROL_LED_PIN_YELL, OUTPUT);
+  pinMode(CONTROL_LED_PIN_GREEN, OUTPUT);
+  pinMode(CONTROL_LED_PIN_RED, OUTPUT);
 }
 
-void loop() {
-  // put your main code here, to run repeatedly:
-  // Serial.begin(115200);
+void loop()
+{
 
-   // put your main code here, to run repeatedly:
-  Serial.println("LED on");
-  digitalWrite(CONTROL_LED_PIN_BLUE , HIGH); // Turn the LED on
-  delay(500);                     // Wait for a second
-  Serial.println("LED off");
-  digitalWrite(CONTROL_LED_PIN_BLUE , LOW);  // Turn the LED off
-  delay(500);
+  //array of leds
+  uint16_t pins[] = {CONTROL_LED_PIN_BLUE, CONTROL_LED_PIN_YELL, CONTROL_LED_PIN_GREEN, CONTROL_LED_PIN_RED};
 
+  for (int i = 0; i < 4; i++) {
+    digitalWrite(pins[i], HIGH); // Turn the LED on
+    delay(500); // Wait for a half of second
+    Serial.println("LED off");
+    digitalWrite(pins[i], LOW); // Turn the LED off
+    delay(500); // Wait for another half of second            
+  }
 
-    digitalWrite(CONTROL_LED_PIN_YELL , HIGH); // Turn the LED on
-  delay(500);                     // Wait for a second
-  Serial.println("LED off");
-  digitalWrite(CONTROL_LED_PIN_YELL , LOW);  // Turn the LED off
-  delay(500);
-
-    digitalWrite(CONTROL_LED_PIN_GREEN , HIGH); // Turn the LED on
-  delay(500);                     // Wait for a second
-  Serial.println("LED off");
-  digitalWrite(CONTROL_LED_PIN_GREEN , LOW);  // Turn the LED off
-  delay(500);
-
-    digitalWrite(CONTROL_LED_PIN_RED , HIGH); // Turn the LED on
-  delay(500);                     // Wait for a second
-  Serial.println("LED off");
-  digitalWrite(CONTROL_LED_PIN_RED , LOW);  // Turn the LED off
-  delay(500);
 }
 
 // put function definitions here:
-int myFunction(int x, int y) {
+int myFunction(int x, int y)
+{
   return x + y;
 }
