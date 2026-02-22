@@ -12,14 +12,39 @@ constexpr uint8_t SERVO_OUTPUT = 10;
 static const float U_REFERENCE = 3.1;
 static const float MAX_DIGITAL = 4095.0;
 
+enum class LedState { ON, OFF };
 enum class CurrentMode { PHOTORESISTOR, POTENTIOMETER, SERVO };
 
-void applyMode(CurrentMode mode, int photoInput, float voltage, int potValue, Servo &servo);
+class Led {
+private:
+    uint8_t pin;
+
+public:
+    constexpr Led(uint8_t ledPin) : pin(ledPin) {}
+
+    void init() const {
+        pinMode(pin, OUTPUT);
+    }
+
+    void set(LedState state) const {
+        if (state == LedState::ON) {
+            digitalWrite(pin, HIGH);
+        } else {
+            digitalWrite(pin, LOW);
+        }
+    }
+    
+    void toggle() const {
+        digitalWrite(pin, !digitalRead(pin));
+    }
+};
+
+void applyMode(CurrentMode mode, int photoInput, float voltage, int potValue, Servo &servo, Led &led);
 
 void setup() {
   Serial.begin(115200);
   pinMode(BUTTON_INPUT, INPUT);
-  pinMode(CONTROL_LED_PIN_GREEN, OUTPUT);
+  // pinMode(CONTROL_LED_PIN_GREEN, OUTPUT);
   pinMode(POTENTIOMETER_INPUT, INPUT);
   analogSetAttenuation(ADC_11db);
 }
@@ -32,10 +57,13 @@ void loop() {
   static bool lastButtonState = LOW;
 
   static Servo myServo;
-  static bool isServoInitialized = false;
-  if(!isServoInitialized) {
+  static bool isInitialized = false;
+  static Led myLed(CONTROL_LED_PIN_GREEN);
+
+  if(!isInitialized) {
     myServo.attach(SERVO_OUTPUT);
-    isServoInitialized = true;
+    myLed.init();
+    isInitialized = true;
   }
 
   start_cycles = esp_cpu_get_ccount();
@@ -56,7 +84,7 @@ void loop() {
     Serial.println(nextMode);
   }
 
-  applyMode(currentMode, rawValue, voltage, potValue, myServo);
+  applyMode(currentMode, rawValue, voltage, potValue, myServo, myLed);
 
   lastButtonState = reading;
 
@@ -67,19 +95,19 @@ void loop() {
   Serial.printf("Cycles: %u | Freq: %u MHz | Core: %d | Time spent: %.9f s\n", spent_cycles, ESP.getCpuFreqMHz(), xPortGetCoreID(), seconds);
 }
 
-void applyMode(CurrentMode mode, int photoResistorInput, float voltage, int potValue, Servo &servo) {
+void applyMode(CurrentMode mode, int photoResistorInput, float voltage, int potValue, Servo &servo, Led &led) {
   switch(mode) {
     case CurrentMode::PHOTORESISTOR: { 
         int onTimePhotoresistor = map(photoResistorInput, 500, 2200, 0, 10000); 
         int offTimePhotoresistor = 10000 - onTimePhotoresistor;
 
         if (onTimePhotoresistor > 0) {
-            digitalWrite(CONTROL_LED_PIN_GREEN, HIGH);
-            delayMicroseconds(onTimePhotoresistor);
+          led.set(LedState::ON);
+          delayMicroseconds(onTimePhotoresistor);
         }
         if (offTimePhotoresistor > 0) {
-            digitalWrite(CONTROL_LED_PIN_GREEN, LOW);
-            delayMicroseconds(offTimePhotoresistor);
+          led.set(LedState::OFF);
+          delayMicroseconds(offTimePhotoresistor);
         };
       break;
     }
@@ -87,12 +115,12 @@ void applyMode(CurrentMode mode, int photoResistorInput, float voltage, int potV
       int onTime = map(potValue, 0, 4095, 0, 10000); 
       int offTime = 10000 - onTime;
       if (onTime > 0) {
-          digitalWrite(CONTROL_LED_PIN_GREEN, HIGH);
-          delayMicroseconds(onTime);
+        led.set(LedState::ON);
+        delayMicroseconds(onTime);
       }
       if (offTime > 0) {
-          digitalWrite(CONTROL_LED_PIN_GREEN, LOW);
-          delayMicroseconds(offTime);
+        led.set(LedState::OFF);
+        delayMicroseconds(offTime);
       }
      break;
     }
